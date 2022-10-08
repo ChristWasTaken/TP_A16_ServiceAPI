@@ -1,4 +1,6 @@
-﻿namespace TP_A16_ServiceAPI.models
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace TP_A16_ServiceAPI.models
 {
     public class Produits
     {
@@ -6,6 +8,7 @@
         public string NomProduit { get; set; }
         public int QuantiteInventaire { get; set; }
         public string FormatProduit { get; set; }
+        [Precision(18, 2)]
         public decimal PrixUnitaire { get; set; }
         public string DescriptionProduit { get; set; }
         public string Categorie { get; set; }

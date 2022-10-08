@@ -6,7 +6,10 @@ namespace TP_A16_ServiceAPI.models
     {
         public ProduitsContext(DbContextOptions<ProduitsContext> options) : base(options)
         {
+            
         }
         public DbSet<Produits> Produits { get; set; } = null;
     }
+
+    
 }

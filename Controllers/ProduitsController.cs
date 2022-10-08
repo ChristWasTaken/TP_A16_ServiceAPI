@@ -42,24 +42,11 @@ namespace TP_A16_ServiceAPI.Controllers
         }
 
         // GET : api/Produits/categorie
-        [HttpGet("/categorie/{categorie}")]
-        public async Task<IEnumerable<Produits>> GetProduitsByCategorie(string categorie)
+        [HttpGet("categorie/{categorie}")]
+        public async Task<ActionResult<IEnumerable<Produits>>> GetProduits(string categorie)
         {
-            return await _context.Produits.ToListAsync();
-            //Console.WriteLine("test");
-            //return _context.Produits.Where(p => p.Categorie == categorie).AsEnumerable().ToList();
-
-            //var produits = await _context.Produits.FindAsync(categorie);
-
-            //var _listeProduits = from p in _context.Produits select p;
-
-            //if (!String.IsNullOrEmpty(categorie))
-            //{
-            //    Console.WriteLine(_listeProduits.ToString());
-            //    _listeProduits = _listeProduits.Where(p => p.Categorie == categorie);
-            //}
-
-            //return produits;
+            Console.WriteLine("\nCATEGORIE : " + categorie + "\n");
+            return await _context.Produits.Where(p => p.Categorie == categorie).ToListAsync();
         }
 
         // PUT: api/Produits/5
