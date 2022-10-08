@@ -22,14 +22,14 @@ namespace TP_A16_ServiceAPI.Controllers
 
         // GET: api/Produits
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Produits>>> GetProduits()
+        public async Task<ActionResult<IEnumerable<ProduitsDTO>>> GetProduits()
         {
-            return await _context.Produits.ToListAsync();
-        }
+            return await _context.Produits.Select(x => ProduitsDTO.ProduitsToDTO(x)).ToListAsync();
+        }    
 
         // GET: api/Produits/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Produits>> GetProduits(int id)
+        public async Task<ActionResult<ProduitsDTO>> GetProduits(int id)
         {
             var produits = await _context.Produits.FindAsync(id);
 
@@ -38,57 +38,79 @@ namespace TP_A16_ServiceAPI.Controllers
                 return NotFound();
             }
 
-            return produits;
+            return ProduitsDTO.ProduitsToDTO(produits);
+        }
+
+        //Get : api/Produits/prix/prixMin/prixMax
+        // Fonctionnalité extra : chercher entre un intervale de 2 prix
+        [HttpGet("prix/{prixMin}/{prixMax}")]
+        public async Task<ActionResult<IEnumerable<ProduitsDTO>>> GetProduits(decimal prixMin, decimal prixMax)
+        {
+            return await _context.Produits.Where(p => p.PrixUnitaire >= prixMin && p.PrixUnitaire <= prixMax)
+                .Select(x => ProduitsDTO.ProduitsToDTO(x)).ToListAsync();
         }
 
         // GET : api/Produits/categorie
+        // Fonctionnalité extra : Chercher par catégorie
         [HttpGet("categorie/{categorie}")]
-        public async Task<ActionResult<IEnumerable<Produits>>> GetProduits(string categorie)
+        public async Task<ActionResult<IEnumerable<ProduitsDTO>>> GetProduits(string categorie)
         {
             Console.WriteLine("\nCATEGORIE : " + categorie + "\n");
-            return await _context.Produits.Where(p => p.Categorie == categorie).ToListAsync();
+            return await _context.Produits.Where(p => p.Categorie == categorie)
+                .Select(x => ProduitsDTO.ProduitsToDTO(x)).ToListAsync();
         }
 
         // PUT: api/Produits/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduits(int id, Produits produits)
+        public async Task<IActionResult> PutProduits(int id, ProduitsDTO produitsDTO)
         {
-            if (id != produits.Id)
+            if (id != produitsDTO.Id)
             {
                 return BadRequest();
+                Console.WriteLine("ID pas bonne");
             }
 
-            _context.Entry(produits).State = EntityState.Modified;
+            var produit = await _context.Produits.FindAsync(id);
+            Console.WriteLine(produit.Categorie);
+            if(produit == null)
+            {
+                return NotFound();
+            }
+
+            produit = Produits.ProduitsDtoToProduits(produit, produitsDTO);
+            Console.WriteLine("apreès: " + produit.Categorie);
+
+            _context.Entry(produit).State = EntityState.Modified;
 
             try
             {
+                Console.WriteLine("allo");
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException) when (!ProduitsExists(id))
             {
-                if (!ProduitsExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                Console.WriteLine("erreur d'insertion");
+                return NotFound();
             }
-
             return NoContent();
         }
 
         // POST: api/Produits
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Produits>> PostProduits(Produits produits)
+        public async Task<ActionResult<ProduitsDTO>> PostProduits(ProduitsDTO produitsDto)
         {
-            _context.Produits.Add(produits);
+            var produit = new Produits();
+            produit = Produits.ProduitsDtoToProduits(produit, produitsDto);
+
+            _context.Produits.Add(produit);
+
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProduits), new { id = produits.Id }, produits);
+            return CreatedAtAction(
+                nameof(GetProduits), 
+                new { id = produitsDto.Id }, ProduitsDTO.ProduitsToDTO(produit));
         }
 
         // DELETE: api/Produits/5
